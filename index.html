@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Departures</title>
+</head>
+<body>
+    <table id="departures-table">
+        <thead>
+            <tr>
+                <th>Line</th>
+                <th>Destination</th>
+                <th>Departure Time</th>
+                <th>Minutes to Departure</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data will be populated here -->
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchDepartures() {
+            const proxyUrl = 'https://api.allorigins.win/get?url=';
+            const targetUrl = encodeURIComponent('https://www.idsjmk.cz/api/departures/busstop-by-name?busStopName=P%C3%A1lavsk%C3%A9%20n%C3%A1m%C4%9Bst%C3%AD');
+            try {
+                const response = await fetch(proxyUrl + targetUrl);
+                const data = await response.json();
+                const parsedData = JSON.parse(data.contents);
+                console.log(parsedData);
+                updateTable(parsedData.stops[0].signs.flatMap(sign => sign.departures));
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function updateTable(departures) {
+            const tbody = document.getElementById('departures-table').querySelector('tbody');
+            tbody.innerHTML = '';  // Clear existing data
+
+            departures.forEach(departure => {
+                const row = document.createElement('tr');
+                const lineCell = document.createElement('td');
+                lineCell.textContent = departure.link;
+                row.appendChild(lineCell);
+
+                const destinationCell = document.createElement('td');
+                destinationCell.textContent = departure.destinationStop;
+                row.appendChild(destinationCell);
+
+                const timeCell = document.createElement('td');
+                timeCell.textContent = departure.time;
+                row.appendChild(timeCell);
+
+                const minutesCell = document.createElement('td');
+                minutesCell.textContent = departure.time;  // Adjust this if you have a different field for minutes
+                row.appendChild(minutesCell);
+
+                tbody.appendChild(row);
+            });
+        }
+
+        fetchDepartures();
+    </script>
+</body>
+</html>
