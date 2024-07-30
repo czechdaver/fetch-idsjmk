@@ -4,21 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bus Departures</title>
+    <style >
+        body{
+            background-color: black;
+            font-family: system-ui;
+        }
+table{
+    background-color: hsl(0 0% 10%);
+    color: white;
+    border: none;
+    border-collapse: collapse;
+    border-radius: .5em;
+    overflow: hidden;
+
+    caption{
+        padding-block-end: .5rem;
+        font-weight: 700;
+        text-align: left;
+    }
+    tr:nth-child(even){
+        background-color: hsl(0 0% 20%);
+    }
+
+    thead tr:nth-child(even){
+        background-color: hsl(0 0% 20%);
+    }
+    th{
+        
+        font-size: 2rem;
+        text-align: left;
+
+        span{
+            vertical-align: middle;
+            font-size: .5em;
+            display: block;
+        }
+    }
+
+    td, th{
+        padding-block: .5rem;
+        padding-inline: 1rem;
+    }
+
+
+}
+
+#tables-container{
+    display: grid;
+            place-items: center;
+            gap: 2.5svb;
+            align-content: center;
+}
+
+p{
+        padding: 1rem;
+        color: white;
+        background-color: hsla(39, 100%, 50%, .8);
+        backdrop-filter: blur(.5rem);
+        border-radius: .5em;
+        font-size: 14px;
+        margin: 0;
+    }
+    </style>
 </head>
 <body>
-    <table id="departures-table">
-        <thead>
-            <tr>
-                <th>Line</th>
-                <th>Destination</th>
-                <th>Departure Time</th>
-                <th>Minutes to Departure</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Data will be populated here -->
-        </tbody>
-    </table>
+    
+    <div id="tables-container">
+        <!-- Tables will be populated here -->
+    </div>
 
     <script>
         async function fetchDepartures() {
@@ -29,39 +82,50 @@
                 const data = await response.json();
                 const parsedData = JSON.parse(data.contents);
                 console.log(parsedData);
-                updateTable(parsedData.stops[0].signs.flatMap(sign => sign.departures));
+                updateTables(parsedData.stops[0].signs, parsedData.stops[0].infoText);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
         }
 
-        function updateTable(departures) {
-            const tbody = document.getElementById('departures-table').querySelector('tbody');
-            tbody.innerHTML = '';  // Clear existing data
+        function updateTables(signs, infoText) {
+            const container = document.getElementById('tables-container');
+            container.innerHTML = '';  // Clear existing tables
 
-            departures.forEach(departure => {
-                const row = document.createElement('tr');
-                const lineCell = document.createElement('td');
-                lineCell.textContent = departure.link;
-                row.appendChild(lineCell);
-
-                const destinationCell = document.createElement('td');
-                destinationCell.textContent = departure.destinationStop;
-                row.appendChild(destinationCell);
-
-                const timeCell = document.createElement('td');
-                timeCell.textContent = departure.time;
-                row.appendChild(timeCell);
-
-                const minutesCell = document.createElement('td');
-                minutesCell.textContent = departure.time;  // Adjust this if you have a different field for minutes
-                row.appendChild(minutesCell);
-
-                tbody.appendChild(row);
+            signs.forEach(sign => {
+                const table = document.createElement('table');
+                table.innerHTML += `
+                    <thead>
+                        <tr>
+                            <th title="Linka">🚉</th>
+                            <th title="Cílová stanice"><span>${sign.busStopSign.description}</span></th>
+                            <th title="Čas odjezdu">➡</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sign.departures.map(departure => `
+                            <tr>
+                                <td>${departure.link}</td>
+                                <td>${departure.destinationStop}</td>
+                                <td>${departure.time}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                `;
+                container.appendChild(table);
             });
+
+            if (infoText && infoText.length > 0) {
+                infoText.forEach(text => {
+                    const paragraph = document.createElement('p');
+                    paragraph.textContent = text;
+                    container.appendChild(paragraph);
+                });
+            }
         }
 
         fetchDepartures();
+        setInterval(fetchDepartures, 60000);
     </script>
 </body>
 </html>
