@@ -1,131 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bus Departures</title>
-    <style >
-        body{
-            background-color: black;
-            font-family: system-ui;
+    <style>
+      body {
+        background-color: black;
+        font-family: system-ui;
+      }
+      table {
+        background-color: hsl(0 0% 10%);
+        color: white;
+        border: none;
+        border-collapse: collapse;
+        border-radius: 0.5em;
+        overflow: hidden;
+
+        caption {
+          padding-block-end: 0.5rem;
+          font-weight: 700;
+          text-align: left;
         }
-table{
-    background-color: hsl(0 0% 10%);
-    color: white;
-    border: none;
-    border-collapse: collapse;
-    border-radius: .5em;
-    overflow: hidden;
+        tr:nth-child(even) {
+          background-color: hsl(0 0% 20%);
+        }
 
-    caption{
-        padding-block-end: .5rem;
-        font-weight: 700;
-        text-align: left;
-    }
-    tr:nth-child(even){
-        background-color: hsl(0 0% 20%);
-    }
+        thead tr:nth-child(even) {
+          background-color: hsl(0 0% 20%);
+        }
+        th {
+          font-size: 2rem;
+          text-align: left;
 
-    thead tr:nth-child(even){
-        background-color: hsl(0 0% 20%);
-    }
-    th{
-        
-        font-size: 2rem;
-        text-align: left;
-
-        span{
+          span {
             vertical-align: middle;
-            font-size: .5em;
+            font-size: 0.5em;
             display: block;
+          }
         }
-    }
 
-    td, th{
-        padding-block: .5rem;
-        padding-inline: 1rem;
-    }
+        td,
+        th {
+          padding-block: 0.5rem;
+          padding-inline: 1rem;
+        }
+      }
 
+      #tables-container {
+        display: grid;
+        place-items: center;
+        gap: 2.5svb;
+        align-content: center;
+      }
 
-}
-
-#tables-container{
-    display: grid;
-            place-items: center;
-            gap: 2.5svb;
-            align-content: center;
-}
-
-p{
+      p {
         padding: 1rem;
         color: white;
-        background-color: hsla(39, 100%, 50%, .8);
-        backdrop-filter: blur(.5rem);
-        border-radius: .5em;
+        background-color: hsla(39, 100%, 50%, 0.8);
+        backdrop-filter: blur(0.5rem);
+        border-radius: 0.5em;
         font-size: 14px;
         margin: 0;
-    }
+      }
     </style>
-</head>
-<body>
-    
+  </head>
+  <body>
     <div id="tables-container">
-        <!-- Tables will be populated here -->
+      <!-- Tables will be populated here -->
     </div>
 
     <script>
-        async function fetchDepartures() {
-            const proxyUrl = 'https://api.allorigins.win/get?url=';
-            const targetUrl = encodeURIComponent('https://www.idsjmk.cz/api/departures/busstop-by-name?busStopName=P%C3%A1lavsk%C3%A9%20n%C3%A1m%C4%9Bst%C3%AD');
-            try {
-                const response = await fetch(proxyUrl + targetUrl);
-                const data = await response.json();
-                const parsedData = JSON.parse(data.contents);
-                console.log(parsedData);
-                updateTables(parsedData.stops[0].signs, parsedData.stops[0].infoText);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
+      async function fetchDepartures() {
+        const proxyUrl = "https://api.allorigins.win/get?url=";
+        const targetUrl = encodeURIComponent(
+          "https://www.idsjmk.cz/api/departures/busstop-by-name?busStopName=P%C3%A1lavsk%C3%A9%20n%C3%A1m%C4%9Bst%C3%AD"
+        );
+        try {
+          const response = await fetch(proxyUrl + targetUrl);
+          const data = await response.json();
+          const parsedData = JSON.parse(data.contents);
+          console.log(parsedData);
+          updateTables(parsedData.stops[0].signs, parsedData.stops[0].infoText);
+        } catch (error) {
+          console.error("Error fetching data:", error);
         }
+      }
 
-        function updateTables(signs, infoText) {
-            const container = document.getElementById('tables-container');
-            container.innerHTML = '';  // Clear existing tables
+      function updateTables(signs, infoText) {
+        const container = document.getElementById("tables-container");
+        container.innerHTML = ""; // Clear existing tables
 
-            signs.forEach(sign => {
-                const table = document.createElement('table');
-                table.innerHTML += `
+        signs.forEach((sign) => {
+          const table = document.createElement("table");
+          table.innerHTML += `
                     <thead>
                         <tr>
                             <th title="Linka">🚉</th>
-                            <th title="Cílová stanice"><span>${sign.busStopSign.description}</span></th>
+                            <th title="Cílová stanice"><span>${
+                              sign.busStopSign.description
+                            }</span></th>
                             <th title="Čas odjezdu">➡</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${sign.departures.map(departure => `
+                        ${sign.departures
+                          .map(
+                            (departure) => `
                             <tr>
                                 <td>${departure.link}</td>
                                 <td>${departure.destinationStop}</td>
                                 <td>${departure.time}</td>
                             </tr>
-                        `).join('')}
+                        `
+                          )
+                          .join("")}
                     </tbody>
                 `;
-                container.appendChild(table);
-            });
+          container.appendChild(table);
+        });
 
-            if (infoText && infoText.length > 0) {
-                infoText.forEach(text => {
-                    const paragraph = document.createElement('p');
-                    paragraph.textContent = text;
-                    container.appendChild(paragraph);
-                });
-            }
+        if (infoText && infoText.length > 0) {
+          infoText.forEach((text) => {
+            const paragraph = document.createElement("p");
+            paragraph.textContent = text;
+            container.appendChild(paragraph);
+          });
         }
+      }
 
-        fetchDepartures();
-        setInterval(fetchDepartures, 60000);
+      fetchDepartures();
+      setInterval(() => {
+        fetchDepartures, window.location.reload();
+      }, 60000);
     </script>
-</body>
+  </body>
 </html>
