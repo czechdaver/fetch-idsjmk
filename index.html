@@ -16,6 +16,7 @@
         border-collapse: collapse;
         border-radius: 0.5em;
         overflow: hidden;
+        inline-size: 100%;
 
         caption {
           padding-block-end: 0.5rem;
@@ -63,76 +64,131 @@
         font-size: 14px;
         margin: 0;
       }
+
+      #progress {
+        block-size: 0.5rem;
+        background-color: hsl(0 0% 20%);
+        border-radius: 100vmax;
+        position: sticky;
+        inset: 0 0 auto 0;
+        scale: var(--progress-trans-x, 0) 1;
+        transform-origin: left;
+        animation: progressAnim linear;
+        animation-timeline: scroll();
+        margin-block-end: 0.5rem;
+        transition: scale .25s;
+      }
     </style>
   </head>
   <body>
+    <div id="progress"></div>
     <div id="tables-container">
       <!-- Tables will be populated here -->
     </div>
-
     <script>
-      async function fetchDepartures() {
-        const proxyUrl = "https://api.allorigins.win/get?url=";
-        const targetUrl = encodeURIComponent(
-          "https://www.idsjmk.cz/api/departures/busstop-by-name?busStopName=P%C3%A1lavsk%C3%A9%20n%C3%A1m%C4%9Bst%C3%AD"
-        );
-        try {
-          const response = await fetch(proxyUrl + targetUrl);
-          const data = await response.json();
-          const parsedData = JSON.parse(data.contents);
-          console.log(parsedData);
-          updateTables(parsedData.stops[0].signs, parsedData.stops[0].infoText);
-        } catch (error) {
-          console.error("Error fetching data:", error);
+      document.addEventListener("DOMContentLoaded", () => {
+const fetchDataTime = 60000;
+
+        async function fetchDepartures() {
+          const proxyUrl = "https://api.allorigins.win/get?url=";
+          const targetUrl = encodeURIComponent(
+            "https://www.idsjmk.cz/api/departures/busstop-by-name?busStopName=P%C3%A1lavsk%C3%A9%20n%C3%A1m%C4%9Bst%C3%AD"
+          );
+          const cacheBust = `&cacheBust=${Date.now()}`;
+          try {
+            const response = await fetch(proxyUrl + targetUrl + cacheBust);
+            const data = await response.json();
+            const parsedData = JSON.parse(data.contents);
+            console.log(parsedData);
+            updateTables(
+              parsedData.stops[0].signs,
+              parsedData.stops[0].infoText
+            );
+          } catch (error) {
+            console.error("Error fetching data:", error);
+          }
         }
-      }
 
-      function updateTables(signs, infoText) {
-        const container = document.getElementById("tables-container");
-        container.innerHTML = ""; // Clear existing tables
+        function updateProgress() {
+          const progressBar = document.getElementById("progress");
+        }
 
-        signs.forEach((sign) => {
-          const table = document.createElement("table");
-          table.innerHTML += `
-                    <thead>
-                        <tr>
-                            <th title="Linka">🚉</th>
-                            <th title="Cílová stanice"><span>${
-                              sign.busStopSign.description
-                            }</span></th>
-                            <th title="Čas odjezdu">➡</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${sign.departures
-                          .map(
-                            (departure) => `
-                            <tr>
-                                <td>${departure.link}</td>
-                                <td>${departure.destinationStop}</td>
-                                <td>${departure.time}</td>
-                            </tr>
-                        `
-                          )
-                          .join("")}
-                    </tbody>
-                `;
-          container.appendChild(table);
-        });
+        function updateTables(signs, infoText) {
+          const container = document.getElementById("tables-container");
+          container.innerHTML = ""; // Clear previous content
 
-        if (infoText && infoText.length > 0) {
-          infoText.forEach((text) => {
-            const paragraph = document.createElement("p");
-            paragraph.textContent = text;
-            container.appendChild(paragraph);
+          if (!signs || signs.length === 0) {
+            const message = document.createElement("p");
+            message.textContent = "Žádné aktuální odjezdy.";
+            container.appendChild(message);
+            return;
+          }
+
+          signs.forEach((sign) => {
+            const table = document.createElement("table");
+            table.innerHTML += `
+              <thead>
+                <tr>
+                  <th title="Linka">🚉</th>
+                  <th title="Cílová stanice"><span>${
+                    sign.busStopSign.description
+                  }</span></th>
+                  <th title="Čas odjezdu">➡</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sign.departures
+                  .map(
+                    (departure) => `
+                    <tr>
+                      <td>${departure.link}</td>
+                      <td>${departure.destinationStop}</td>
+                      <td>${departure.time}</td>
+                    </tr>
+                  `
+                  )
+                  .join("")}
+              </tbody>
+            `;
+            container.appendChild(table);
           });
-        }
-      }
 
-      fetchDepartures();
-      setInterval(() => {
-        fetchDepartures, window.location.reload();
-      }, 60000);
+          if (infoText && infoText.length > 0) {
+            infoText.forEach((text) => {
+              const paragraph = document.createElement("p");
+              paragraph.textContent = text;
+              container.appendChild(paragraph);
+            });
+          }
+        }
+
+        function startProgressBar(duration) {
+            const progressElement = document.getElementById('progress');
+            let progressValue = 0;
+            const interval = 1000; // 1 second
+
+            // Function to update the custom property
+            function updateProgress() {
+                progressValue += interval / duration; // Increment progress value
+                if (progressValue > 1) progressValue = 1; // Cap at 1
+                progressElement.style.setProperty('--progress-trans-x', progressValue);
+            }
+
+            // Start updating progress every second
+            const intervalId = setInterval(updateProgress, interval);
+
+            // Stop updating progress after the duration
+            setTimeout(() => clearInterval(intervalId), duration);
+        }
+
+        fetchDepartures();
+        startProgressBar(fetchDataTime);
+
+        setInterval(() => {
+          fetchDepartures();
+          startProgressBar(fetchDataTime);
+        }, fetchDataTime);
+      });
     </script>
   </body>
 </html>
