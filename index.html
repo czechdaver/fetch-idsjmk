@@ -8,6 +8,7 @@
       body {
         background-color: black;
         font-family: system-ui;
+        min-height: 100vh;
       }
       table {
         background-color: hsl(0 0% 10%);
@@ -17,12 +18,18 @@
         border-radius: 0.5em;
         overflow: hidden;
         inline-size: 100%;
+        text-align: left !important;
+
+        &:first-child {
+          margin-bottom: 2.5vh;
+        }
 
         caption {
           padding-block-end: 0.5rem;
           font-weight: 700;
           text-align: left;
         }
+
         tr:nth-child(even) {
           background-color: hsl(0 0% 20%);
         }
@@ -46,13 +53,6 @@
           padding-block: 0.5rem;
           padding-inline: 1rem;
         }
-      }
-
-      #tables-container {
-        display: grid;
-        place-items: center;
-        gap: 2.5svb;
-        align-content: center;
       }
 
       p {
@@ -87,7 +87,7 @@
     </div>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-const fetchDataTime = 60000;
+        const fetchDataTime = 60000;
 
         async function fetchDepartures() {
           const proxyUrl = "https://api.allorigins.win/get?url=";
@@ -188,6 +188,12 @@ const fetchDataTime = 60000;
           fetchDepartures();
           startProgressBar(fetchDataTime);
         }, fetchDataTime);
+
+        const body = document.querySelector('body');
+
+        body.addEventListener('click', function() {
+              location.reload();
+            });
       });
     </script>
   </body>
